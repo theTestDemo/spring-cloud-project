@@ -1,0 +1,41 @@
+# 服务端口
+server:
+  port: 8083
+
+spring:
+  application:
+    name: user-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848 # Nacos 注册中心地址
+#数据库配置（从 Nacos 配置中心读取，此处为本地备份）
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/cloud_demo?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+#    username: root
+#    password: 1337281766   # 改为你的 MySQL 密码
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#  redis:
+#    host: localhost
+#    port: 6379
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml   # 新增的 XML 映射文件路
+  type-aliases-package: com.example.userservice.entity
+  configuration:
+    map-underscore-to-camel-case: true    #数据库下划线转驼峰
+
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: user-service-group
+    send-message-timeout: 5000
+
+feign:
+  sentinel:
+    enabled: true
+
+# JWT 配置（从 Nacos 配置中心读取，此处为本地备份）
+#jwt:
+#  secret: yourSecretKey12345678901234567890
+#  expiration: 3600000   # 1小时

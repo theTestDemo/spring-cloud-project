@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.orderservice.mapper.PayMapper">
+    <insert id="addPayment">
+        INSERT INTO payment (order_no, amount, pay_time, status, transaction_id)
+        VALUES (#{payment.orderNo}, #{payment.amount}, #{payment.payTime}, #{payment.status}, #{payment.transactionId})
+    </insert>
+</mapper>

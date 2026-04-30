@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.orderservice.mapper.OrderMapper">
+    <insert id="addOrder">
+        INSERT INTO orders (user_id, order_no, total_amount, status)
+        VALUES (#{userId}, #{orderNo}, #{totalAmount}, #{status})
+    </insert>
+    <insert id="addShoppingCart">
+        INSERT INTO shopping_cart (user_id, product_id, quantity)
+        VALUES (#{userId}, #{productId}, #{quantity}) ON DUPLICATE KEY
+        UPDATE quantity = quantity + #{quantity};
+    </insert>
+    <select id="shoppingCartInfo" resultType="com.example.orderservice.entity.ShoppingCart">
+        SELECT product_id, quantity
+        FROM shopping_cart
+        WHERE user_id = #{userId}
+    </select>
+    <insert id="addOrderItem">
+        INSERT INTO order_item (order_no, product_id, quantity, unit_price)
+        VALUES (#{orderNo}, #{productId}, #{quantity}, #{unitPrice})
+    </insert>
+    <delete id="deleteShoppingCart" parameterType="long">
+        DELETE FROM shopping_cart WHERE user_id = #{userId}
+    </delete>
+    <insert id="batchAddOrderItem" parameterType="list">
+        INSERT INTO order_item (order_no, product_id, quantity, unit_price)
+        VALUES
+        <foreach collection="items" item="item" separator=",">
+            (#{item.orderNo}, #{item.productId}, #{item.quantity}, #{item.unitPrice})
+        </foreach>
+    </insert>
+    <select id="orderInfoByOrderNoUserId" resultType="com.example.orderservice.entity.Order">
+        SELECT order_no, total_amount, status FROM orders WHERE order_no = #{orderNo} and user_id = #{userId}
+    </select>
+
+    <update id="updateOrderStatusToPaid">
+        update orders set status = 1 where order_no = #{orderNo} and status = 0 and user_id = #{userId}
+    </update>
+    <update id="updateOrderStatusToCancel">
+        update orders set status = 2 where order_no = #{orderNo}
+    </update>
+
+    <select id="orderInfoByOrderNo" resultType="com.example.orderservice.entity.Order">
+        select * from orders where order_no = #{orderNo}
+    </select>
+    <select id="findOrderItemsByOrderNo" resultType="com.example.orderservice.entity.OrderItem">
+        select * from order_item where order_no = #{orderNo}
+    </select>
+    <update id = "addShoppingCartQuantity">
+        update shopping_cart set quantity = quantity + #{quantity} where user_id = #{userId} and product_id = #{productId}
+    </update>
+</mapper>

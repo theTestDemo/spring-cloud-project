@@ -1,0 +1,27 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: good-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/product_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 1337281766
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.goodservice.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+# 可选：如果使用 RocketMQ（商品服务可能需要发送消息，比如库存变更）
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: good-service-group

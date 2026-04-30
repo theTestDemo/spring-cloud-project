@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.goodservice.mapper.GoodsMapper">
+    <select id="goodInfo" resultType="com.example.goodservice.entity.Goods">
+        select * from goods where id = #{id}
+    </select>
+    <update id="reduceStock">
+        UPDATE goods SET stock = stock - #{quantity} WHERE id = #{id} AND stock >= #{quantity}
+    </update>
+    <insert id="insertStockLog" parameterType="com.example.goodservice.entity.StockLog">
+        INSERT INTO stock_log (product_id, change_amount, before_stock, after_stock)
+        VALUES (#{productId}, #{changeAmount}, #{beforeStock}, #{afterStock})
+    </insert>
+    <update id="increaseStock">
+        UPDATE goods SET stock = stock + #{quantity} WHERE id = #{id}
+    </update>
+</mapper>
