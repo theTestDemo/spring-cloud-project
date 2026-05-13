@@ -27,9 +27,9 @@ mybatis:
 
 rocketmq:
   name-server: localhost:9876
-  producer:
-    group: user-service-group
-    send-message-timeout: 5000
+#  producer:
+#    group: user-service-group
+#    send-message-timeout: 5000
 
 feign:
   sentinel:

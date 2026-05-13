@@ -75,14 +75,14 @@ public class UserServiceImpl implements UserService {
             // 3. 将查询结果存入 Redis，设置 60 秒过期
             redisUtil.set(key, JSON.toJSONString(user), 60, TimeUnit.SECONDS);
 //            发送MQ消息（已注释，避免磁盘满影响）
-//            try {
-//                String msg = "用户数据已加载，用户ID: " + user.getId() + ", 用户名: " + user.getUsername();
-//                rocketMQTemplate.convertAndSend("user-topic", msg);
-//                System.out.println("消息已发送: " + msg);
-//            } catch (Exception e) {
-//                System.err.println("发送MQ消息失败: " + e.getMessage());
-//                // 不影响主流程
-//            }
+            try {
+                String msg = "用户数据已加载，用户ID: " + user.getId() + ", 用户名: " + user.getUsername();
+                rocketMQTemplate.convertAndSend("user-topic", msg);
+                System.out.println("消息已发送: " + msg);
+            } catch (Exception e) {
+                System.err.println("发送MQ消息失败: " + e.getMessage());
+                // 不影响主流程
+            }
         }
 
         return user;

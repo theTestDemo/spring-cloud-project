@@ -4,11 +4,11 @@ server:
 spring:
   application:
     name: order-service
-  datasource:
-    url: jdbc:mysql://localhost:3306/order_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: 1337281766
-    driver-class-name: com.mysql.cj.jdbc.Driver
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/order_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+#    username: root
+#    password: 1337281766
+#    driver-class-name: com.mysql.cj.jdbc.Driver
   cloud:
     nacos:
       discovery:
@@ -24,9 +24,9 @@ feign:
     enabled: true
 rocketmq:
   name-server: localhost:9876
-  producer:
-    group: user-service-group
-    send-message-timeout: 5000
+#  producer:
+#    group: user-service-group
+#    send-message-timeout: 5000
 # Redisson 配置（使用 Redis 单机模式）
 redisson:
   single-server-config:

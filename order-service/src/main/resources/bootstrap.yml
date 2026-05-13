@@ -1,10 +1,10 @@
 spring:
   application:
-    name: good-service
+    name: order-service
   cloud:
     nacos:
       config:
         server-addr: 127.0.0.1:8848
         file-extension: yaml
         group: DEFAULT_GROUP
-        prefix: good-service-dev   # 对应 Data ID 的前缀
+        prefix: order-service-dev   # 对应 Data ID 的前缀

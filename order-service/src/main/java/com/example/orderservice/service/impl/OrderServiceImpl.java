@@ -13,14 +13,17 @@ import com.example.orderservice.entity.Order;
 import com.example.orderservice.entity.OrderItem;
 import com.example.orderservice.entity.Payment;
 import com.example.orderservice.entity.ShoppingCart;
+import com.example.orderservice.event.OrderCreatedEvent;
 import com.example.orderservice.mapper.OrderMapper;
 import com.example.orderservice.mapper.PayMapper;
 import com.example.orderservice.service.OrderService;
 import com.example.orderservice.vo.PaymentVO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -42,6 +45,7 @@ import java.util.concurrent.TimeUnit;
  * @author 胡孟阳
  * @since 2026-04-19
  */
+@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
     @Autowired
@@ -64,11 +68,13 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private RedissonClient redissonClient;
 
+    @Autowired private ApplicationEventPublisher applicationEventPublisher;
+
 
     /**
      * 根据用户 ID 查询订单列表
      *
-     * @param id 用户 Id
+     * @param userId 用户 Id
      * @return 订单列表，可能为空列表
      */
     @Override
@@ -203,8 +209,9 @@ public class OrderServiceImpl implements OrderService {
      * 5、插入订单主表（状态为待支付）
      * 6、批量插入订单明细
      * 7、清空购物车
-     * 8、发送延时消息（正常逻辑为30min，此处设置为30s便于测试）
-     * 9、返回订单信息（订单号、总金额、状态）
+     * 8、发送订单创建事件（由监听器在事务提交后异步处理通知）
+     * 9、发送延时消息（正常逻辑为30min，此处设置为30s便于测试）
+     * 10、返回订单信息（订单号、总金额、状态）
      * </p>
      * @param userId 用户ID
      * @return 订单信息（订单号、总金额、状态）
@@ -265,12 +272,19 @@ public class OrderServiceImpl implements OrderService {
             goods.setOrderNo(orderNo);
             goods.setStatus(0);
             goods.setTotalAmount(totalAmount);
-            orderMapper.deleteShoppingCart(userId);
             //清空购物车
+            orderMapper.deleteShoppingCart(userId);
+            log.info(">>> 即将发布 OrderCreatedEvent");
+            //发布订单创建事件（事务提交后由 OrderEventListener 异步处理）
+            applicationEventPublisher.publishEvent(
+                    new OrderCreatedEvent(this,userId.toString(),orderNo)
+            );
+            log.info(">>> 已发布 OrderCreatedEvent");
             Map<String, Object> map = new HashMap<>();
             map.put("orderNo", orderNo);
             Message<String> message = MessageBuilder.withPayload(JSON.toJSONString(map)).build();
             rocketMQTemplate.syncSend("order-cancel-topic", message, 1000, 16);
+            log.info("下单成功，订单号：{}，准备发布事件", orderNo);
             return goods;
             // 原有下单逻辑（查询购物车、扣库存、生成订单、清空购物车）
         } catch (InterruptedException e) {
