@@ -7,15 +7,20 @@ import com.example.common.util.PasswordEncoderUtil;
 import com.example.common.util.RedisUtil;
 import com.example.userservice.client.OrderClient;
 import com.example.userservice.dto.OrderDTO;
+import com.example.userservice.dto.UserDTO;
 import com.example.userservice.entity.User;
 import com.example.userservice.mapper.UserMapper;
 import com.example.userservice.service.UserService;
+import io.jsonwebtoken.Jwts;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 用户服务实现类
@@ -27,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  * @auther 胡孟阳
  * @since 2026-04-19
  */
-
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
@@ -137,6 +142,13 @@ public class UserServiceImpl implements UserService {
         if (!PasswordEncoderUtil.matches(password, user.getPassword())) {
             throw new BusinessException("密码错误");
         }
+        String token = JwtUtil.generateToken(user.getId(), user.getUsername());
+        log.info(">>> 生成 Token 的完整 Payload: {}",
+                Jwts.parserBuilder()
+                        .setSigningKey("yourSecretKey12345678901234567890".getBytes())
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody());
         return JwtUtil.generateToken(user.getId(),user.getUsername());
     }
 
@@ -162,4 +174,32 @@ public class UserServiceImpl implements UserService {
         }
         return userOrders;
     }
+    /**
+     * 批量查询用户信息（用于商品评论展示）
+     * <p>
+     * 根据用户ID列表批量查询用户信息，用于评论列表中展示评论者用户名
+     * </p>
+     *
+     * @param userIds 用户ID列表
+     * @return 用户DTO列表
+     * @throws BusinessException 当用户信息不存在时抛出
+     */
+    @Override
+    public List<UserDTO> reviewUserInfo(List<Long> userIds) {
+        List<User> users = userMapper.reviewUserInfo(userIds);
+        if (users == null || users.isEmpty()) {
+            throw new BusinessException("用户信息不存在");
+        }
+        List<UserDTO> userDTOS = users.stream()
+                .map(user ->{
+                    UserDTO userDTO = new UserDTO();
+                    userDTO.setId(user.getId());
+                    userDTO.setUsername(user.getUsername());
+                    return userDTO;
+                })
+                .collect(Collectors.toList());
+        return userDTOS;
+    }
+
+
 }

@@ -19,6 +19,15 @@
         select id from user where username = #{username}
     </select>
     <select id="login" resultType="com.example.userservice.entity.User">
-        select id,password from user where username = #{username}
+        select id,username,password from user where username = #{username}
     </select>
+    <select id="reviewUserInfo" resultType="com.example.userservice.entity.User">
+        SELECT id, username
+        FROM user
+        WHERE id IN
+        <foreach collection="userIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

@@ -15,4 +15,53 @@
     <update id="increaseStock">
         UPDATE goods SET stock = stock + #{quantity} WHERE id = #{id}
     </update>
+    <select id="reviewPlagiarismCheck" resultType="int">
+        SELECT COUNT(1) FROM product_review
+        WHERE order_no = #{orderNo}
+          AND product_id = #{productId}
+          AND status = 1
+    </select>
+    <insert id="insertReview" parameterType="com.example.goodservice.entity.ProductReview">
+        INSERT INTO product_review (review_no, user_id, product_id, order_no, rating, content, pics)
+        VALUES (#{reviewNo}, #{userId}, #{productId}, #{orderNo}, #{rating}, #{content}, #{pics})
+    </insert>
+
+    <update id="updateReview">
+        UPDATE goods
+        SET review_count = review_count + 1,
+            avg_rating = (avg_rating * review_count + #{rating}) / (review_count + 1)
+        WHERE id = #{productId};
+    </update>
+    <select id="review" resultType="com.example.goodservice.entity.ProductReview">
+        SELECT review_no, user_id, rating, content, pics, create_time
+        FROM product_review
+        WHERE product_id = #{productId} AND status = 1
+        ORDER BY #{sort} DESC
+    </select>
+    <select id="countReviews" resultType="Integer">
+        SELECT count(1)
+        FROM product_review
+        WHERE product_id = #{productId}
+        AND status = 1
+    </select>
+    <select id="reviewInfoByNo" resultType="com.example.goodservice.entity.ProductReview">
+        SELECT *
+        FROM product_review
+        WHERE review_no = #{reviewNo}
+        AND status = 1
+    </select>
+    <update id="delReview">
+        update product_review
+        SET status = 0
+        where review_no = #{reviewNo}
+    </update>
+    <update id="rollbackReview">
+        UPDATE goods
+        SET review_count = review_count - 1,
+        avg_rating = CASE
+        WHEN review_count - 1 = 0 THEN 0.0
+        ELSE(avg_rating * review_count - #{deletedRating}/(review_count - 1))
+        END
+        WHERE id = #{productId}
+    </update>
 </mapper>

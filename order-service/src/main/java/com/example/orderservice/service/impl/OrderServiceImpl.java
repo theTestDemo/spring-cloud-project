@@ -358,5 +358,36 @@ public class OrderServiceImpl implements OrderService {
         return vo;
     }
 
+    /**
+     * 根据订单号查询订单详情
+     *
+     * @param orderNo 订单号
+     * @return 订单实体，若不存在则返回 null
+     */
+    @Override
+    public Order orderInfoByOrderNo(String orderNo) {
+        return orderMapper.orderInfoByOrderNo(orderNo);
+    }
+
+    /**
+     * 查询订单信息（用于商品评论验证）
+     * <p>
+     * 根据订单号查询订单信息，用于验证用户是否有权对商品进行评论
+     * 返回订单中包含的商品ID列表和订单状态
+     * </p>
+     *
+     * @param orderNo 订单号
+     * @return 订单审核DTO（包含用户ID、商品ID列表、订单状态）
+     * @throws BusinessException 当订单不存在时抛出
+     */
+    @Override
+    public OrderReviewDTO orderReview(String orderNo) {
+        List<OrderReviewDTO> list = orderMapper.addReviewCheck(orderNo);
+        if (list == null || list.isEmpty()) {
+            throw new BusinessException("订单不存在");
+        }
+        return list.get(0);
+    }
+
 
 }

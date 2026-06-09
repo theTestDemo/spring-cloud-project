@@ -6,6 +6,7 @@ import com.example.common.domain.AjaxResult;
 import com.example.common.exception.BusinessException;
 import com.example.orderservice.dto.BuyGoodsDTO;
 import com.example.orderservice.dto.GoodsDTO;
+import com.example.orderservice.dto.OrderReviewDTO;
 import com.example.orderservice.entity.Order;
 import com.example.orderservice.entity.Payment;
 import com.example.orderservice.service.OrderService;
@@ -165,5 +166,32 @@ public class OrderController {
                                           @RequestParam String orderNo) {
         PaymentVO paymentVO = orderService.pay(userId, orderNo);
         return ResponseEntity.ok(AjaxResult.success(paymentVO));
+    }
+
+    /**
+     * 根据订单号查询订单信息
+     *
+     * @param orderNo 订单号
+     * @return 订单详情
+     */
+    @GetMapping("orderInfoByOrderNo")
+    public ResponseEntity<AjaxResult> orderInfoByOrderNo(@RequestParam String orderNo) {
+        Order order = orderService.orderInfoByOrderNo(orderNo);
+        return ResponseEntity.ok(AjaxResult.success(order));
+    }
+
+    /**
+     * 查询订单信息（用于商品评论验证）
+     * <p>
+     * 根据订单号查询订单信息，用于验证用户是否有权对商品进行评论
+     * </p>
+     *
+     * @param orderNo 订单号
+     * @return 订单审核信息（用户ID、商品ID列表、订单状态）
+     */
+    @GetMapping("orderReview")
+    public ResponseEntity<AjaxResult> orderReview(@RequestParam String orderNo) {
+        OrderReviewDTO dto = orderService.orderReview(orderNo);
+        return ResponseEntity.ok(AjaxResult.success(dto));
     }
 }

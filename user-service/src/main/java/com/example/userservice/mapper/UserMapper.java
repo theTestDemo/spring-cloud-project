@@ -4,6 +4,8 @@ import com.example.userservice.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 
 @Mapper
 public interface UserMapper {
@@ -12,4 +14,5 @@ public interface UserMapper {
     Integer register(User user);
     User findUsername(String username);
     User login(String username);
+    List<User> reviewUserInfo(@Param("userIds")List<Long> userIds);
 }

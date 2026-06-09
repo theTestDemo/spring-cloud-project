@@ -4,6 +4,7 @@ import com.example.common.domain.AjaxResult;
 import com.example.common.exception.BusinessException;
 import com.example.userservice.client.OrderClient;
 import com.example.userservice.dto.OrderDTO;
+import com.example.userservice.dto.UserDTO;
 import com.example.userservice.entity.User;
 import com.example.userservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,5 +133,25 @@ public class UserController {
     public ResponseEntity<AjaxResult> getUserOrders(@PathVariable Long userId) {
         List<OrderDTO> orders = orderClient.getOrdersByUserId(userId);
         return ResponseEntity.ok(AjaxResult.success(orders));
+    }
+
+    /**
+     * 批量查询用户信息（用于商品评论展示）
+     * <p>
+     * 根据用户ID列表批量获取用户信息，用于评论列表中展示评论者用户名
+     * </p>
+     *
+     * @param userList 用户ID列表
+     * @return 用户信息列表
+     */
+    @PostMapping("/reviewUserInfo")
+    public ResponseEntity<AjaxResult> getReviewUserInfo(@RequestBody List<Long> userList) {
+        try {
+            List<UserDTO> userDTOS = userService.reviewUserInfo(userList);
+            return ResponseEntity.ok(AjaxResult.success(userDTOS));
+        }catch (BusinessException e){
+            return ResponseEntity.status(400).body(AjaxResult.error(e.getMessage()));
+        }
+
     }
 }

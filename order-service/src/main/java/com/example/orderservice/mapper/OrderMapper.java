@@ -1,5 +1,6 @@
 package com.example.orderservice.mapper;
 
+import com.example.orderservice.dto.OrderReviewDTO;
 import com.example.orderservice.entity.Order;
 import com.example.orderservice.entity.OrderItem;
 import com.example.orderservice.entity.ShoppingCart;
@@ -8,7 +9,6 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
 
 @Mapper
@@ -46,4 +46,5 @@ public interface OrderMapper {
     Integer addShoppingCartQuantity(@Param("userId")Long userId,
                                     @Param("productId")Long productId,
                                     @Param("quantity")Long quantity);
+    List<OrderReviewDTO> addReviewCheck(@Param("orderNo")String orderNo);
 }

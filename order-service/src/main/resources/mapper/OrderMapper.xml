@@ -50,4 +50,25 @@
     <update id = "addShoppingCartQuantity">
         update shopping_cart set quantity = quantity + #{quantity} where user_id = #{userId} and product_id = #{productId}
     </update>
+    <resultMap id="OrderReviewDTOMap" type="com.example.orderservice.dto.OrderReviewDTO">
+        <!-- 主键（用于分组） -->
+        <id column="order_no" property="orderNo"/>
+        <!-- 简单字段 -->
+        <result column="user_id" property="userId"/>
+        <result column="status" property="status"/>
+        <!-- 集合字段：column 是 SQL 中的列名，property 是 DTO 中的集合属性，ofType 是集合元素类型 -->
+        <collection property="productId" ofType="Long">
+            <result column="product_id"/>
+        </collection>
+    </resultMap>
+    <select id="addReviewCheck" resultMap="OrderReviewDTOMap">
+        SELECT
+            o.order_no,
+            o.user_id,
+            o.status,
+            oi.product_id
+        FROM orders o
+                 INNER JOIN order_item oi ON o.order_no = oi.order_no
+        WHERE o.order_no = #{orderNo}
+    </select>
 </mapper>

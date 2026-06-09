@@ -10,6 +10,8 @@ public class Goods {
   private BigDecimal price;
   private long stock;
   private java.sql.Timestamp createTime;
+  private Integer reviewCount;
+  private BigDecimal avgRating;
 
 
   public long getId() {
@@ -55,5 +57,15 @@ public class Goods {
   public void setCreateTime(java.sql.Timestamp createTime) {
     this.createTime = createTime;
   }
+
+  public Integer getReviewCount() {
+    return reviewCount;
+  }
+
+  public void setReviewCount(Integer reviewCount) { this.reviewCount = reviewCount; }
+
+  public BigDecimal getAvgRating() { return avgRating;}
+
+  public void setAvgRating(BigDecimal avgRating) { this.avgRating = avgRating;}
 
 }

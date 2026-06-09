@@ -25,3 +25,7 @@ rocketmq:
   name-server: localhost:9876
 #  producer:
 #    group: good-service-group
+
+feign:
+  sentinel:
+    enabled: true
