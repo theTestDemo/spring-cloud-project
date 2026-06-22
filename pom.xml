@@ -16,6 +16,7 @@
         <module>common</module>
         <module>order-service</module>
         <module>good-service</module>
+        <module>ai-service</module>
     </modules>
 
     <properties>

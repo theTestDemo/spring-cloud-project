@@ -39,8 +39,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         String path = request.getURI().getPath();
 
-        // 放行登录、注册等公开接口
-        if (path.contains("/user/login") || path.contains("/user/register")) {
+        // 放行登录、注册、AI 流式测试等公开接口
+        if (path.contains("/user/login")
+            || path.contains("/user/register")
+            || path.contains("/ai/test")
+            || path.contains("/ai/chat/stream")) {
             return chain.filter(exchange);
         }
 

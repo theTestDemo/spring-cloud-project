@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 流式对话测试</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 24px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 24px;
+        }
+        h1 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4f8ef7;
+            padding-bottom: 8px;
+        }
+        .field {
+            margin-bottom: 14px;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: #4f8ef7;
+        }
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 10px 0;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        #sendBtn {
+            background: #4f8ef7;
+            color: #fff;
+        }
+        #sendBtn:hover { background: #3a76d9; }
+        #sendBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #stopBtn {
+            background: #e74c3c;
+            color: #fff;
+        }
+        #stopBtn:hover { background: #c0392b; }
+        #stopBtn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .output-label {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+            display: inline-block;
+        }
+        .status-dot.active {
+            background: #2ecc71;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        #output {
+            min-height: 180px;
+            max-height: 420px;
+            overflow-y: auto;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .cursor {
+            display: inline-block;
+            width: 7px;
+            height: 15px;
+            background: #cdd6f4;
+            animation: blink 0.8s step-end infinite;
+            vertical-align: text-bottom;
+            margin-left: 1px;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .error { color: #f38ba8; }
+        .info  { color: #74c7ec; font-size: 12px; }
+        .endpoint-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .endpoint-group input { flex: 3; }
+        .endpoint-group input:nth-child(2) { flex: 1; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🤖 AI 流式对话测试（SSE）</h1>
+
+    <div class="endpoint-group">
+        <div class="field" style="flex:3;margin-bottom:0">
+            <label>服务地址</label>
+            <input type="text" id="baseUrl" value="http://localhost:8087" placeholder="http://localhost:8087">
+        </div>
+        <div class="field" style="flex:1;margin-bottom:0">
+            <label>Session ID</label>
+            <input type="text" id="sessionId" value="test-001" placeholder="default">
+        </div>
+    </div>
+
+    <div class="field">
+        <label>消息内容（Enter 发送）</label>
+        <input type="text" id="message" value="你好，请介绍一下你自己" autofocus
+               onkeydown="if(event.key==='Enter') sendMessage()">
+    </div>
+
+    <div class="btn-row">
+        <button id="sendBtn" onclick="sendMessage()">发送</button>
+        <button id="stopBtn" onclick="stopStream()" disabled>停止</button>
+    </div>
+
+    <div class="output-label">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">就绪</span>
+    </div>
+    <div id="output"><span class="info">// 发送消息后，AI 回复将在此逐字显示…</span></div>
+</div>
+
+<script>
+    let eventSource = null;
+
+    function setStatus(active, text) {
+        const dot = document.getElementById('statusDot');
+        const txt = document.getElementById('statusText');
+        dot.classList.toggle('active', active);
+        txt.textContent = text;
+    }
+
+    function sendMessage() {
+        const baseUrl  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+        const sid      = encodeURIComponent(document.getElementById('sessionId').value || 'default');
+        const msg      = document.getElementById('message').value.trim();
+        if (!msg) return;
+
+        // 重置输出区
+        const output = document.getElementById('output');
+        output.innerHTML = '';
+        document.getElementById('sendBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        setStatus(true, '连接中…');
+
+        const url = `${baseUrl}/ai/chat/stream?sessionId=${sid}&message=${encodeURIComponent(msg)}`;
+        logInfo(`GET ${url}`);
+
+        eventSource = new EventSource(url);
+        let fullText = '';
+
+        eventSource.onmessage = (event) => {
+            const data = event.data;
+            if (data === '[DONE]') {
+                logInfo('\n--- 流结束 ---');
+                closeStream();
+                return;
+            }
+            if (data.startsWith('错误：')) {
+                logError(data);
+                closeStream();
+                return;
+            }
+            fullText += data;
+            render(fullText);
+        };
+
+        eventSource.onerror = (e) => {
+            logError('连接断开或服务异常（请确认服务已启动、API Key 已配置）');
+            closeStream();
+        };
+    }
+
+    function stopStream() {
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
+        logInfo('\n--- 用户手动停止 ---');
+        closeStream();
+    }
+
+    function closeStream() {
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
+        document.getElementById('sendBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        setStatus(false, '就绪');
+        // 移除光标
+        const cursor = document.querySelector('.cursor');
+        if (cursor) cursor.remove();
+    }
+
+    function render(text) {
+        const output = document.getElementById('output');
+        output.innerHTML = escapeHtml(text) + '<span class="cursor"></span>';
+        output.scrollTop = output.scrollHeight;
+    }
+
+    function logInfo(msg) {
+        const output = document.getElementById('output');
+        output.innerHTML += `\n<span class="info">${escapeHtml(msg)}</span>`;
+    }
+
+    function logError(msg) {
+        const output = document.getElementById('output');
+        output.innerHTML += `\n<span class="error">${escapeHtml(msg)}</span>`;
+        output.scrollTop = output.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+</script>
+</body>
+</html>

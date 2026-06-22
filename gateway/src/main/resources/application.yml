@@ -45,3 +45,9 @@ spring:
             - Path=/order/**
           filters:
             - StripPrefix=0
+        - id: ai-route
+          uri: lb://ai-service
+          predicates:
+            - Path=/ai/**
+          filters:
+            - StripPrefix=0

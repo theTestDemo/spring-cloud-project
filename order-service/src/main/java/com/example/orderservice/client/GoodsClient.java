@@ -1,13 +1,9 @@
 package com.example.orderservice.client;
 
-import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.example.common.domain.AjaxResult;
 import com.example.orderservice.fallback.GoodsInfoFallbackFactory;
-import jdk.internal.org.objectweb.asm.tree.analysis.Value;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 

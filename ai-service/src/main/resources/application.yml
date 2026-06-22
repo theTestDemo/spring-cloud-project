@@ -1,0 +1,28 @@
+server:
+  port: 8087
+  # SSE 流式接口依赖异步回调写入响应，需延长 Servlet 异步超时时间（默认 30s 太短）
+  servlet:
+    async-timeout: 300000   # 5 分钟，与一次完整流式对话的最大时长对齐
+
+spring:
+  application:
+    name: ai-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+  config:
+    import: optional:nacos:ai-service-dev.yaml
+
+# ==================== AI 模型配置 ====================
+# 阿里百炼（DashScope）大模型接入
+# 使用 langchain4j-dashscope 原生 SDK（非 OpenAI 兼容层），正确处理流式 + 工具调用
+# API Key 建议通过 Nacos 配置中心管理，避免明文提交到代码仓库
+ai:
+  api-key: ${DASHSCOPE_API_KEY:sk-your-api-key-here}
+  model: qwen-plus    # 可选：qwen-turbo（便宜）/ qwen-plus（性价比）/ qwen-max（效果最好）
+feign:
+  sentinel:
+    enabled: true
